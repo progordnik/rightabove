@@ -19,7 +19,7 @@
             <th>Class</th>
             <th>Type</th>
         </tr>
-        <c:forEach  items="${Waterfowls}" var ="waterfowl">
+        <c:forEach  items="${waterfowls}" var ="waterfowl">
             <tr>
                 <td>${waterfowl.getId()}</td>
                 <td>${waterfowl.getName()}</td>

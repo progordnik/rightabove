@@ -6,4 +6,8 @@ public class WaterfowlDto extends AnimalDto {
         super(id, name, className, type);
     }
 
+    public WaterfowlDto(String name, String className, String type) {
+        super(name, className, type);
+    }
+
 }

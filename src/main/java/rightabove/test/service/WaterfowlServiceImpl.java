@@ -26,7 +26,7 @@ public class WaterfowlServiceImpl implements AnimalService {
     }
 
     @Override
-    public AnimalDto createAnimal(rightabove.test.controller.dto.AnimalDto animalDto) {
-        return null;
+    public AnimalDto createAnimal(AnimalDto animalDto) {
+        return mapper.entityToDto(animalRepository.createAnimal(animalDto));
     }
 }

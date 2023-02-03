@@ -6,9 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import rightabove.test.repository.entity.AmphibianEntity;
 import rightabove.test.repository.entity.AnimalEntity;
-import rightabove.test.service.domain.AnimalDto;
+import rightabove.test.controller.dto.AnimalDto;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,29 +15,29 @@ import java.util.List;
 @Repository
 public class AmphibianRepositoryImpl implements AnimalRepository {
 
-    private final DataSource dataSource;
+    private final Connection connection;
     private static final Logger logger = LogManager.getLogger();
 
     @Autowired
-    public AmphibianRepositoryImpl(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public AmphibianRepositoryImpl(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
     public AnimalEntity createAnimal(AnimalDto animalDto) {
         String insertQuery = "INSERT INTO amphibian (name, class_name, type)"
-                + "VALUES (?, ?, 'amphibian')";
-        AmphibianEntity amphibian = new AmphibianEntity(animalDto.getName(), animalDto.getClassName());
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement =
+                + "VALUES (?, ?, ?)";
+        AmphibianEntity amphibian = new AmphibianEntity(animalDto.getName(), animalDto.getClassName(), animalDto.getType());
+        try (PreparedStatement preparedStatement =
                      connection.prepareStatement(
                              insertQuery, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, animalDto.getName());
             preparedStatement.setString(2, animalDto.getClassName());
+            preparedStatement.setString(3, animalDto.getType());
             preparedStatement.executeUpdate();
             ResultSet resultSet = preparedStatement.getGeneratedKeys();
             if (resultSet.next()) {
-                amphibian.setId(resultSet.getObject(1, Long.class));
+                amphibian.setId(Long.parseLong(String.valueOf(resultSet.getObject(1, Long.class))));
             }
         } catch (SQLException e) {
             logger.error(String.format("Can`t add amphibian %s to DB", animalDto), e.getMessage());
@@ -51,11 +50,10 @@ public class AmphibianRepositoryImpl implements AnimalRepository {
     @Override
     public List<AnimalEntity> getAnimalEntityList() {
         String selectQuery = "SELECT *"
-                + "FROM amphibian"
-                + "WHERE deleted = false";
+                + "FROM amphibian "
+                + "WHERE is_deleted IS NOT TRUE";
         List<AnimalEntity> animalEntities = new ArrayList<>();
-        try (Connection connection = dataSource.getConnection();
-             PreparedStatement preparedStatement =
+        try (PreparedStatement preparedStatement =
                      connection.prepareStatement(selectQuery)) {
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
@@ -73,7 +71,8 @@ public class AmphibianRepositoryImpl implements AnimalRepository {
         long animalId = resultSet.getLong("id");
         String animalName = resultSet.getString("name");
         String animalClass = resultSet.getString("class_name");
-        AmphibianEntity amphibianEntity = new AmphibianEntity(animalId,animalName,animalClass);
+        String animalType = resultSet.getString("type");
+        AmphibianEntity amphibianEntity = new AmphibianEntity(animalId,animalName,animalClass, animalType);
         return amphibianEntity;
     }
 }

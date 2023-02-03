@@ -26,6 +26,6 @@ public class MammalServiceImpl implements AnimalService {
 
     @Override
     public AnimalDto createAnimal(AnimalDto animalDto) {
-        return null;
+        return mapper.entityToDto(animalRepository.createAnimal(animalDto));
     }
 }

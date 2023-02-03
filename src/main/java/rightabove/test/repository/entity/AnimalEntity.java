@@ -7,15 +7,17 @@ public abstract class AnimalEntity {
 
     private String type;
 
-    public AnimalEntity(Long id, String name, String className) {
+    public AnimalEntity(Long id, String name, String className, String type) {
         this.id = id;
         this.name = name;
         this.className = className;
+        this.type = type;
     }
 
-    public AnimalEntity(String name, String className) {
+    public AnimalEntity(String name, String className, String type) {
         this.name = name;
         this.className = className;
+        this.type = type;
     }
 
     public Long getId() {

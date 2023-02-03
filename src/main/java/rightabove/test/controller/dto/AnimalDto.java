@@ -13,6 +13,12 @@ public abstract class AnimalDto {
         this.type = type;
     }
 
+    public AnimalDto(String name, String className, String type) {
+        this.name = name;
+        this.className = className;
+        this.type = type;
+    }
+
     public Long getId() {
         return id;
     }

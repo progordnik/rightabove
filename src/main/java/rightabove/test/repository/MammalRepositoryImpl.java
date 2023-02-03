@@ -6,38 +6,38 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import rightabove.test.repository.entity.AnimalEntity;
 import rightabove.test.repository.entity.MammalEntity;
-import rightabove.test.service.domain.AnimalDto;
+import rightabove.test.controller.dto.AnimalDto;
 
-import javax.sql.DataSource;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 @Repository
 public class MammalRepositoryImpl implements AnimalRepository {
-    private final DataSource dataSource;
+    private final Connection connection;
     private static final Logger logger = LogManager.getLogger();
 
     @Autowired
-    public MammalRepositoryImpl(DataSource dataSource) {
-        this.dataSource = dataSource;
+    public MammalRepositoryImpl(Connection connection) {
+        this.connection = connection;
     }
 
     @Override
     public AnimalEntity createAnimal(AnimalDto animalDto) {
         String insertQuery = "INSERT INTO mammal (name, class_name, type)"
-                + "VALUES (?, ?, 'mammal')";
-        MammalEntity mammal = new MammalEntity(animalDto.getName(), animalDto.getClassName());
-        try (Connection connection = dataSource.getConnection();
+                + "VALUES (?, ?, ?)";
+        MammalEntity mammal = new MammalEntity(animalDto.getName(), animalDto.getClassName(), animalDto.getType());
+        try (
              PreparedStatement preparedStatement =
                      connection.prepareStatement(
                              insertQuery, Statement.RETURN_GENERATED_KEYS)) {
             preparedStatement.setString(1, animalDto.getName());
             preparedStatement.setString(2, animalDto.getClassName());
+            preparedStatement.setString(3, animalDto.getType());
             preparedStatement.executeUpdate();
             ResultSet resultSet = preparedStatement.getGeneratedKeys();
             if (resultSet.next()) {
-                mammal.setId(resultSet.getObject(1, Long.class));
+                mammal.setId(Long.parseLong(String.valueOf(resultSet.getObject(1, Integer.class))));
             }
         } catch (SQLException e) {
             logger.error(String.format("Can`t add mammal %s to DB", animalDto), e.getMessage());
@@ -50,10 +50,11 @@ public class MammalRepositoryImpl implements AnimalRepository {
     @Override
     public List<AnimalEntity> getAnimalEntityList() {
         String selectQuery = "SELECT *"
-                + "FROM mammal"
-                + "WHERE deleted = false";
+                + "FROM mammal "
+                + "WHERE is_deleted IS NOT TRUE";
         List<AnimalEntity> animalEntities = new ArrayList<>();
-        try (Connection connection = dataSource.getConnection();
+        try (
+//                Connection connection = dataSource.getConnection();
              PreparedStatement preparedStatement =
                      connection.prepareStatement(selectQuery)) {
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -72,7 +73,8 @@ public class MammalRepositoryImpl implements AnimalRepository {
         long animalId = resultSet.getLong("id");
         String animalName = resultSet.getString("name");
         String animalClass = resultSet.getString("class_name");
-        MammalEntity mammalEntity = new MammalEntity(animalId,animalName,animalClass);
+        String animalType = resultSet.getString("type");
+        MammalEntity mammalEntity = new MammalEntity(animalId,animalName,animalClass, animalType);
         return mammalEntity;
     }
 
